@@ -30,3 +30,19 @@ def load_mnist_train(path):
         images = np.fromfile(im_unit, dtype=np.uint8).reshape(len(labels), 784)
 
     return images, labels
+
+## load the mnist test data
+def load_mnist_test(path):
+    image_file = path+"/t10k-images-idx3-ubyte"
+    label_file = path+"/t10k-labels-idx1-ubyte"
+
+    with open(label_file) as lb_unit:
+        magic, n = struct.unpack('>II', lb_unit.read(8))
+        labels = np.fromfile(lb_unit, dtype=np.uint8)
+
+    with open(image_file) as im_unit:
+        magic, num, rows, cols = struct.unpack('>IIII', im_unit.read(16))
+        images = np.fromfile(im_unit, dtype=np.uint8).reshape(len(labels), 784)
+
+    return images, labels
+
