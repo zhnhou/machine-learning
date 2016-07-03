@@ -8,12 +8,13 @@ class NeuralNet(object):
     ## input y: (n_example)
 
     def __init__(self, num_output, num_feature, num_hidden=30, lambda1=0.0, lambda2=0.0, 
-                 epochs=1000, decrease_rate=0.00, shuffle=True, minibatches=50):
+                 eta=0.001, epochs=1000, decrease_rate=0.00, shuffle=True, minibatches=50):
         self.num_output = num_output
         self.num_feature = num_feature
         self.num_hidden = num_hidden
         self.lambda1 = lambda1
         self.lambda2 = lambda2
+        self.eta = eta
         self.epochs = epochs
         self.decrease_rate = decrease_rate
         self.shuffle = shuffle
@@ -32,7 +33,7 @@ class NeuralNet(object):
     def _initialize_weights(self):
         theta1 = np.random.uniform(-1.0, 1.0, 
                  size=self.num_hidden*(self.num_feature+1)).reshape(self.num_hidden, self.num_feature+1)
-        theta2 = np.random.uniform(-1.0, 1.0.
+        theta2 = np.random.uniform(-1.0, 1.0,
                  size=self.num_output*(self.num_hidden+1)).reshape(self.num_output, self.num_hidden+1)
         return theta1, theta2
 
@@ -43,7 +44,7 @@ class NeuralNet(object):
         return expit(z) * (1 - expit(z))
 
     def _add_bias_unit(self, X):
-        X_new = np.ones(X.shape[0], X.shape[1]+1)
+        X_new = np.ones((X.shape[0], X.shape[1]+1))
         X_new[:,1:] = X
 
         return X_new
@@ -101,13 +102,13 @@ class NeuralNet(object):
 
         return grad1, grad2
 
-    def nn_learn(self, X, y, print_progress=False):
+    def nn_learn(self, X, y):
         self.cost_ = []
 
         X_data = X.copy()
         y_data = y.copy()
 
-        y_enc = self.encode_labels(y_data, self.num_output)
+        y_enc = self._encode_labels(y_data, self.num_output)
 
         delta1_prev = np.zeros(self.theta1.shape)
         delta2_prev = np.zeros(self.theta2.shape)

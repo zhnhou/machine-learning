@@ -4,17 +4,17 @@ import struct
 
 def fetch_mnist_train(path):
     
-    image_file = 'train-images-idx3-ubyte.gz'
-    label_file = 'train-labels-idx1-ubyte.gz'
+    image_file = 'train-images-idx3-ubyte'
+    label_file = 'train-labels-idx1-ubyte'
 
     web_path = 'http://yann.lecun.com/exdb/mnist/'
 
     if ( not os.path.isfile(path+image_file) ):
-        os.system("wget -O "+path+"/"+image_file+" "+web_path+image_file)
-        os.system("gzip "+path+"/"+image_file+" -d") # decompress and delete .gz file
+        os.system("wget -O "+path+"/"+image_file+".gz "+web_path+image_file+".gz")
+        os.system("gzip "+path+"/"+image_file+".gz -d") # decompress and delete .gz file
     if ( not os.path.isfile(path+label_file) ):
-        os.system("wget -O "+path+"/"+label_file+" "+web_path+label_file)
-        os.system("gzip "+path+"/"+label_file+" -d")
+        os.system("wget -O "+path+"/"+label_file+".gz "+web_path+label_file+".gz")
+        os.system("gzip "+path+"/"+label_file+".gz -d")
 
 ## load the mnist training data
 def load_mnist_train(path):
