@@ -149,3 +149,12 @@ class NeuralNet(object):
                 delta1_prev, delta2_prev = delta1, delta2
         
         return self
+
+    def nn_predict(self, X):
+        a1, z2, a2, z3, a3 = self._feedforward(X, self.theta1, self.theta2)
+
+        # a3: n_example * n_output
+        # axis=0 in the book but note the difference of how I get a2 in feedforward
+        y_pred = np.argmax(a3, axis=1)
+
+        return y_pred
