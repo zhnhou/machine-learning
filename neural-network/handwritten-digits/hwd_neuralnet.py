@@ -28,6 +28,9 @@ class NeuralNet(object):
     def _sigmoid(self, z):
         return expit(z)
 
+    def _sigmoid_gradient(self, z):
+        return expit(z) * (1 - expit(z))
+
     def _add_bias_unit(self, X):
         X_new = np.ones(X.shape[0], X.shape[1]+1)
         X_new[:,1:] = X
@@ -43,12 +46,12 @@ class NeuralNet(object):
         return lambda_/2.0 * (np.sum(theta1[:,1:]**2) + np.sum(theta2[:,1:]**2))
 
     def _feedforward(self, X, theta1, theta2):
-        a1 = self._add_bias_unit(X)
-        z2 = a1.dot(theta1.T)
-        a2 = self._sigmoid(z2)
-        a2 = self._add_bias_unit(a2)
+        a1 = self._add_bias_unit(X) # n_example * (n_feature+1)
+        z2 = a1.dot(theta1.T) # n_example * n_hidden ## here is different from the PML book
+        a2 = self._sigmoid(z2) 
+        a2 = self._add_bias_unit(a2) # n_example * (n_hidden+1)
 
-        z3 = a2.dot(theta2.T)
+        z3 = a2.dot(theta2.T) # n_example * n_output
         a3 = self._sigmoid(z3)
         
         return a1, z2, a2, z3, a3
@@ -59,5 +62,33 @@ class NeuralNet(object):
         ## regularization ##
         cost += self._L1_reg(self.lambda1, theta1, theta2) + self._L2_reg(self.lambda2, theta1, theta2)
 
-        return cost / y_enc.shape[1]
+        return cost
+
+
+    ## implementing backpropagation
+    def _get_gradient(self, a1, a2, a3, z2, y_enc, theta1, theta2):
+
+        # y_enc - n_output * n_example
+        delta3 = a3.T - y_enc
+
+        z2 = self._add_bias_unit(z2) # n_example * (n_hidden+1)
+
+        delta2 = theta2.T.dot(delta3) * self._sigmoid_gradient(z2.T) # (n_hidden+1) * n_example
+        delta2 = delta2[1:,:]
+
+        # a2: n_example * (n_hidden+1)
+        # delta3: n_output * n_example
+        grad2 = delta3.dot(a2.T) # n_output * n_hidden+1
+        
+        # delta2: n_hidden * n_example
+        # a1: n_example * (n_feature+1)
+        grad1 = delta2.dot(a1) # n_hidden * (n_feature+1)
+
+        ## regularization
+        grad1[:,1:] += theta1[:,1:] * (self.lambda1 + self.lambda2)
+        grad2[:,1:] += theta2[:,1:] * (self.lambda1 + self.lambda2)
+
+        return grad1, grad2
+
+
 
