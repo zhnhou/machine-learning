@@ -8,13 +8,14 @@ class NeuralNet(object):
     ## input y: (n_example)
 
     def __init__(self, num_output, num_feature, num_hidden=30, lambda1=0.0, lambda2=0.0, 
-                 eta=0.001, epochs=1000, decrease_rate=0.00, shuffle=True, minibatches=50):
+                 eta=0.001, alpha=0.0, epochs=1000, decrease_rate=0.00, shuffle=True, minibatches=50):
         self.num_output = num_output
         self.num_feature = num_feature
         self.num_hidden = num_hidden
         self.lambda1 = lambda1
         self.lambda2 = lambda2
         self.eta = eta
+        self.alpha = alpha
         self.epochs = epochs
         self.decrease_rate = decrease_rate
         self.shuffle = shuffle
@@ -90,7 +91,7 @@ class NeuralNet(object):
 
         # a2: n_example * (n_hidden+1)
         # delta3: n_output * n_example
-        grad2 = delta3.dot(a2.T) # n_output * n_hidden+1
+        grad2 = delta3.dot(a2) # n_output * n_hidden+1
         
         # delta2: n_hidden * n_example
         # a1: n_example * (n_feature+1)
@@ -134,7 +135,7 @@ class NeuralNet(object):
                 a1, z2, a2, z3, a3 = self._feedforward(X[idx], self.theta1, self.theta2)
 
                 # a3 is already within mini samples
-                cost = self._costfunction(y_enc[:,idx], a3, self.theta1, self.theta2)
+                cost = self._costfunction(y_enc[:,idx], a3.T, self.theta1, self.theta2)
                 self.cost_.append(cost)
 
                 # calculate grad via backpropagation
