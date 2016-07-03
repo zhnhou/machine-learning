@@ -1,14 +1,25 @@
 import numpy as np
 from scipy.special import expit
+import sys
 
 class NeuralNet(object):
 
-    def __init__(self, num_output, num_feature, num_hidden=30, lambda1=0.0, lambda2=0.0):
+    ## input X: (n_example, n_feature)
+    ## input y: (n_example)
+
+    def __init__(self, num_output, num_feature, num_hidden=30, lambda1=0.0, lambda2=0.0, 
+                 epochs=1000, decrease_rate=0.00, shuffle=True, minibatches=50):
         self.num_output = num_output
         self.num_feature = num_feature
         self.num_hidden = num_hidden
         self.lambda1 = lambda1
         self.lambda2 = lambda2
+        self.epochs = epochs
+        self.decrease_rate = decrease_rate
+        self.shuffle = shuffle
+        self.minibatches = minibatches
+
+        self.theta1, self.theta2 = self._initialize_weights()
 
     def _encode_labels(self, y, n_output):
         ones = np.zeros((n_output, y.shape[0]))
@@ -66,7 +77,7 @@ class NeuralNet(object):
 
 
     ## implementing backpropagation
-    def _get_gradient(self, a1, a2, a3, z2, y_enc, theta1, theta2):
+    def _gradient_backpropagation(self, a1, a2, a3, z2, y_enc, theta1, theta2):
 
         # y_enc - n_output * n_example
         delta3 = a3.T - y_enc
@@ -90,5 +101,51 @@ class NeuralNet(object):
 
         return grad1, grad2
 
+    def nn_learn(self, X, y, print_progress=False):
+        self.cost_ = []
 
+        X_data = X.copy()
+        y_data = y.copy()
 
+        y_enc = self.encode_labels(y_data, self.num_output)
+
+        delta1_prev = np.zeros(self.theta1.shape)
+        delta2_prev = np.zeros(self.theta2.shape)
+
+        for i in np.arange(self.epochs):
+            ## adaptive learning rate
+            self.eta *= 1.0/(1.0 + self.decrease_rate * i)
+
+            sys.stderr.write('\rEpoch: %d/%d' % (i+1,self.epochs))
+            sys.stderr.flush()
+
+            if self.shuffle:
+                idx = np.random.permutation(y_data.shape[0])
+                
+                X_data = X_data[idx] # note X_data is 2D array, this is very neat
+                y_data = y_data[idx]
+
+            mini = np.array_split(np.arange(y_data.shape[0]), self.minibatches)
+
+            for idx in mini:
+                
+                # feedforward
+                a1, z2, a2, z3, a3 = self._feedforward(X[idx], self.theta1, self.theta2)
+
+                # a3 is already within mini samples
+                cost = self._costfunction(y_enc[:,idx], a3, self.theta1, self.theta2)
+                self.cost_.append(cost)
+
+                # calculate grad via backpropagation
+                grad1, grad2 = self._gradient_backpropagation(a1, a2, a3, z2, y_enc[:,idx], self.theta1, self.theta2)
+
+                # update weights
+                delta1, delta2 = self.eta * grad1, self.eta * grad2
+                
+
+                self.theta1 -= delta1 + self.alpha * delta1_prev
+                self.theta2 -= delta2 + self.alpha * delta2_prev
+
+                delta1_prev, delta2_prev = delta1, delta2
+        
+        return self
